@@ -11,9 +11,9 @@ import (
 
 // Client is a Pim client that users of this library interact with.
 type Client struct {
-	client http.Client
-	url    string
-	token  token
+	client     *http.Client
+	reqFactory requestFactory
+	token      token
 }
 
 // Credentials is what's used to authenticate connector and get a token.
@@ -29,28 +29,26 @@ type token struct {
 
 // New authenticates and returns PIM client
 func New(url string, creds Credentials) (Client, error) {
-	c := Client{}
-	c.client = http.Client{}
+	client := new(http.Client)
 
-	treq, err := composeTokenRequest(url, creds)
-	if err != nil {
-		return c, err
-	}
-
+	treq := newTokenRequest(url, creds)
 	var t token
-	err = c.do(treq, &t)
+	err := sendAkeneoRequest(client, treq, &t)
 	if err != nil {
-		return c, err
+		return Client{}, err
 	}
 
-	c.url = url
-	c.token = t
-
-	return c, nil
+	return Client{client, requestFactory{url}, t}, nil
 }
 
-func (c *Client) do(req *http.Request, v interface{}) error {
-	res, err := c.client.Do(req)
+func (c *Client) do(req *http.Request, result interface{}) error {
+	req.Header.Add("Authorization", "Bearer "+c.token.Access)
+
+	return sendAkeneoRequest(c.client, req, result)
+}
+
+func sendAkeneoRequest(client *http.Client, req *http.Request, result interface{}) error {
+	res, err := client.Do(req)
 	if err != nil {
 		return err
 	}
@@ -61,7 +59,7 @@ func (c *Client) do(req *http.Request, v interface{}) error {
 		return err
 	}
 
-	err = json.Unmarshal(body, v)
+	err = json.Unmarshal(body, result)
 	if err != nil {
 		return err
 	}
@@ -69,7 +67,7 @@ func (c *Client) do(req *http.Request, v interface{}) error {
 	return nil
 }
 
-func composeTokenRequest(pimurl string, creds Credentials) (*http.Request, error) {
+func newTokenRequest(pimurl string, creds Credentials) *http.Request {
 	form := url.Values{}
 	form.Add("username", creds.User)
 	form.Add("password", creds.Pass)
@@ -78,13 +76,10 @@ func composeTokenRequest(pimurl string, creds Credentials) (*http.Request, error
 
 	token := base64.StdEncoding.EncodeToString([]byte(creds.Cid + ":" + creds.Secret))
 
-	req, err := http.NewRequest("POST", pimurl+"/api/oauth/v1/token", body)
-	if err != nil {
-		return nil, err
-	}
+	req, _ := http.NewRequest("POST", pimurl+"/api/oauth/v1/token", body)
 
 	req.Header.Add("Content-type", "application/x-www-form-urlencoded")
 	req.Header.Add("Authorization", "Basic "+token)
 
-	return req, nil
+	return req
 }
