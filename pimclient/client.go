@@ -59,6 +59,10 @@ func sendAkeneoRequest(client *http.Client, req *http.Request, result interface{
 		return err
 	}
 
+	if result == nil {
+		return nil
+	}
+
 	err = json.Unmarshal(body, result)
 	if err != nil {
 		return err

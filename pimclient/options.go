@@ -29,3 +29,11 @@ func (c *Client) GetAttributeOption(attr, code string) (AttributeOption, error) 
 
 	return opt, nil
 }
+
+// CreateAttributeOption creates option.
+func (c *Client) CreateAttributeOption(opt AttributeOption) error {
+	path := fmt.Sprintf("/api/rest/v1/attributes/%s/options", opt.Attr)
+	req := c.reqFactory.newPostRequest(path, opt)
+
+	return c.do(req, nil)
+}
