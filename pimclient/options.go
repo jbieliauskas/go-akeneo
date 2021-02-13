@@ -1,8 +1,6 @@
 package pimclient
 
-import (
-	"fmt"
-)
+import "fmt"
 
 // AttributeOption is an attribute option response structure.
 type AttributeOption struct {
@@ -18,11 +16,9 @@ type Labels map[string]string
 // GetAttributeOption gets an attribute option.
 func (c *Client) GetAttributeOption(attr, code string) (AttributeOption, error) {
 	path := fmt.Sprintf("/api/rest/v1/attributes/%s/options/%s", attr, code)
-	req := c.reqFactory.newGetRequest(path, nil)
-
 	var opt AttributeOption
 
-	err := c.do(req, &opt)
+	err := c.get(path, nil, &opt)
 	if err != nil {
 		return opt, err
 	}
@@ -31,9 +27,8 @@ func (c *Client) GetAttributeOption(attr, code string) (AttributeOption, error) 
 }
 
 // CreateAttributeOption creates option.
-func (c *Client) CreateAttributeOption(opt AttributeOption) error {
+func (c *Client) CreateAttributeOption(opt AttributeOption) (string, error) {
 	path := fmt.Sprintf("/api/rest/v1/attributes/%s/options", opt.Attr)
-	req := c.reqFactory.newPostRequest(path, opt)
 
-	return c.do(req, nil)
+	return c.post(path, opt)
 }
