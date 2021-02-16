@@ -4,7 +4,6 @@ import "fmt"
 
 // AttributeOption is an attribute option response structure.
 type AttributeOption struct {
-	Attr   string `json:"attribute"`
 	Code   string `json:"code"`
 	Order  int    `json:"sort_order"`
 	Labels Labels `json:"labels"`
@@ -27,8 +26,8 @@ func (c *Client) GetAttributeOption(attr, code string) (AttributeOption, error) 
 }
 
 // CreateAttributeOption creates option.
-func (c *Client) CreateAttributeOption(opt AttributeOption) (string, error) {
-	path := fmt.Sprintf("/api/rest/v1/attributes/%s/options", opt.Attr)
+func (c *Client) CreateAttributeOption(attr string, opt AttributeOption) (string, error) {
+	path := fmt.Sprintf("/api/rest/v1/attributes/%s/options", attr)
 
 	return c.post(path, opt)
 }
