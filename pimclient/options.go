@@ -5,7 +5,7 @@ import "fmt"
 // AttributeOption is an attribute option response structure.
 type AttributeOption struct {
 	Code   string `json:"code"`
-	Order  int    `json:"sort_order"`
+	Ord    *int   `json:"sort_order,omitempty"`
 	Labels Labels `json:"labels"`
 }
 
@@ -30,4 +30,13 @@ func (c *Client) CreateAttributeOption(attr string, opt AttributeOption) (string
 	path := fmt.Sprintf("/api/rest/v1/attributes/%s/options", attr)
 
 	return c.post(path, opt)
+}
+
+// SetOrder changes sort_order property (initializes it if nil).
+func (opt *AttributeOption) SetOrder(order int) {
+	if opt.Ord == nil {
+		opt.Ord = new(int)
+	}
+
+	*opt.Ord = order
 }
