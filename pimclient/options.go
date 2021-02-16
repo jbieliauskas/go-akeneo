@@ -6,7 +6,7 @@ import "fmt"
 type AttributeOption struct {
 	Code   string `json:"code"`
 	Ord    *int   `json:"sort_order,omitempty"`
-	Labels Labels `json:"labels"`
+	Labels Labels `json:"labels,omitempty"`
 }
 
 // Labels is a JSON object that some Akeneo entities have.
