@@ -5,8 +5,8 @@ import (
 	"net/http"
 )
 
-// Client is a Pim client that users of this library interact with.
-type Client struct {
+// PIMClient is a Pim client that users of this library interact with.
+type PIMClient struct {
 	client *http.Client
 	url    string
 	token  token
@@ -24,15 +24,15 @@ type token struct {
 }
 
 // New authenticates and returns PIM client
-func New(url string, creds Credentials) (Client, error) {
+func New(url string, creds Credentials) (PIMClient, error) {
 	client := new(http.Client)
 
 	t, err := getAccessToken(client, url, creds)
 	if err != nil {
-		return Client{}, err
+		return PIMClient{}, err
 	}
 
-	return Client{client, url, t}, nil
+	return PIMClient{client, url, t}, nil
 }
 
 func getAccessToken(client *http.Client, url string, creds Credentials) (token, error) {

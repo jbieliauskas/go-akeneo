@@ -7,7 +7,7 @@ import (
 )
 
 // GetAttributeOption gets an attribute option.
-func (c *Client) GetAttributeOption(attr, code string) (pim.AttributeOption, error) {
+func (c *PIMClient) GetAttributeOption(attr, code string) (pim.AttributeOption, error) {
 	path := fmt.Sprintf("/api/rest/v1/attributes/%s/options/%s", attr, code)
 	var opt pim.AttributeOption
 
@@ -20,7 +20,7 @@ func (c *Client) GetAttributeOption(attr, code string) (pim.AttributeOption, err
 }
 
 // CreateAttributeOption creates option.
-func (c *Client) CreateAttributeOption(attr string, opt pim.AttributeOption) (string, error) {
+func (c *PIMClient) CreateAttributeOption(attr string, opt pim.AttributeOption) (string, error) {
 	path := fmt.Sprintf("/api/rest/v1/attributes/%s/options", attr)
 
 	return c.post(path, opt)

@@ -9,7 +9,7 @@ import (
 	"github.com/google/go-querystring/query"
 )
 
-func (c *Client) get(path string, filter interface{}, result interface{}) error {
+func (c *PIMClient) get(path string, filter interface{}, result interface{}) error {
 	values, _ := query.Values(filter)
 	q := values.Encode()
 	if q != "" {
@@ -22,7 +22,7 @@ func (c *Client) get(path string, filter interface{}, result interface{}) error 
 	return sendAkeneoRequest(c.client, req, result)
 }
 
-func (c *Client) post(path string, payload interface{}) (string, error) {
+func (c *PIMClient) post(path string, payload interface{}) (string, error) {
 	req := newJSONRequest("POST", c.url+path, payload)
 	req.Header.Set("Authorization", "Bearer "+c.token.Access)
 
