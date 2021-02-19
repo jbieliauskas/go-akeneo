@@ -28,7 +28,7 @@ func (c *PIMClient) post(path string, payload interface{}) (string, error) {
 
 	res, err := c.client.Do(req)
 	if err != nil {
-		return "", err
+		return "", wrapFailedError()
 	}
 
 	res.Body.Close()
@@ -47,13 +47,13 @@ func newJSONRequest(method, url string, payload interface{}) *http.Request {
 func sendAkeneoRequest(client *http.Client, req *http.Request, result interface{}) error {
 	res, err := client.Do(req)
 	if err != nil {
-		return err
+		return wrapFailedError()
 	}
 
 	defer res.Body.Close()
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
-		return err
+		return wrapFailedError()
 	}
 
 	if result == nil {
@@ -62,7 +62,7 @@ func sendAkeneoRequest(client *http.Client, req *http.Request, result interface{
 
 	err = json.Unmarshal(body, result)
 	if err != nil {
-		return err
+		return wrapFailedError()
 	}
 
 	return nil

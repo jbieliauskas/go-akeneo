@@ -29,7 +29,7 @@ func New(url string, creds Credentials) (PIMClient, error) {
 
 	t, err := getAccessToken(client, url, creds)
 	if err != nil {
-		return PIMClient{}, err
+		return PIMClient{}, wrapFailedError()
 	}
 
 	return PIMClient{client, url, t}, nil
@@ -53,7 +53,7 @@ func getAccessToken(client *http.Client, url string, creds Credentials) (token, 
 
 	err := sendAkeneoRequest(client, req, &t)
 	if err != nil {
-		return t, err
+		return t, wrapFailedError()
 	}
 
 	return t, nil
