@@ -5,13 +5,11 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
-
-	"github.com/google/go-querystring/query"
+	"net/url"
 )
 
-func (c *PIMClient) get(path string, filter interface{}, result interface{}) error {
-	values, _ := query.Values(filter)
-	q := values.Encode()
+func (c *PIMClient) get(path string, query url.Values, result interface{}) error {
+	q := query.Encode()
 	if q != "" {
 		path += "?" + q
 	}
