@@ -53,25 +53,14 @@ func (page *Page) At(i int, entity interface{}) {
 	json.Unmarshal(raw, entity)
 }
 
-func (page *Page) link(key string) (string, bool) {
-	link, found := page.res.Links[key]
-	if !found {
-		return "", false
-	}
-
-	return link.URL, true
-}
-
-func (page *Page) linkMissing(key string) bool {
-	_, found := page.link(key)
+func (page *Page) linkMissing(link string) bool {
+	_, found := page.res.Links[link]
 	return !found
 }
 
 func (page *Page) getNewPage(link string, client *PIMClient) (Page, error) {
-	url, _ := page.link(link)
-
 	var res pageResponse
-	err := client.getViaFullURL(url, &res)
+	err := client.getViaFullURL(page.res.Links[link].URL, &res)
 	if err != nil {
 		return Page{}, err
 	}
