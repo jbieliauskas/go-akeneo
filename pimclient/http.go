@@ -3,19 +3,26 @@ package pimclient
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 )
 
 func (c *PIMClient) get(path string, query url.Values, result interface{}) error {
-	q := query.Encode()
-	if q != "" {
-		path += "?" + q
+	url := c.url + path
+	if len(query) > 0 {
+		url += "?" + query.Encode()
 	}
 
-	req, _ := http.NewRequest("GET", c.url+path, nil)
-	req.Header.Add("Authorization", "Bearer "+c.token.Access)
+	return c.getViaFullURL(url, result)
+}
+
+func (c *PIMClient) getViaFullURL(url string, result interface{}) error {
+	req, _ := http.NewRequest("GET", url, nil)
+
+	token := fmt.Sprintf("Bearer %s", c.token.Access)
+	req.Header.Add("Authorization", token)
 
 	return sendAkeneoRequest(c.client, req, result)
 }
