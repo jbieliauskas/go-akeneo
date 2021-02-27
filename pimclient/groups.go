@@ -8,13 +8,7 @@ import (
 
 // ListAttributeGroups returns a list of all attribute groups in PIM.
 func (c *PIMClient) ListAttributeGroups() (Page, error) {
-	var groups pageResponse
-	err := c.get("/api/rest/v1/attribute-groups", nil, &groups)
-	if err != nil {
-		return Page{}, err
-	}
-
-	return Page{groups}, nil
+	return c.list("/api/rest/v1/attribute-groups", nil)
 }
 
 // GetAttributeGroup gets attribute group by code.
@@ -22,7 +16,7 @@ func (c *PIMClient) GetAttributeGroup(code string) (pim.AttributeGroup, error) {
 	path := fmt.Sprintf("/api/rest/v1/attribute-groups/%s", code)
 	var group pim.AttributeGroup
 
-	err := c.get(path, nil, &group)
+	err := c.get(path, &group)
 	if err != nil {
 		return group, err
 	}
@@ -32,5 +26,5 @@ func (c *PIMClient) GetAttributeGroup(code string) (pim.AttributeGroup, error) {
 
 // CreateAttributeGroup creates a group.
 func (c *PIMClient) CreateAttributeGroup(group pim.AttributeGroup) (string, error) {
-	return c.post("/api/rest/v1/attribute-groups", group)
+	return c.create("/api/rest/v1/attribute-groups", group)
 }

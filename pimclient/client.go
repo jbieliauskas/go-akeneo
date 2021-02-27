@@ -51,7 +51,7 @@ func getAccessToken(client *http.Client, url string, creds Credentials) (token, 
 	token := base64.StdEncoding.EncodeToString([]byte(creds.Cid + ":" + creds.Secret))
 	req.Header.Set("Authorization", "Basic "+token)
 
-	err := sendAkeneoRequest(client, req, &t)
+	err := sendRequest(client, req, &t)
 	if err != nil {
 		return t, wrapFailedError()
 	}

@@ -9,25 +9,26 @@ import (
 	"net/url"
 )
 
-func (c *PIMClient) get(path string, query url.Values, result interface{}) error {
+func (c *PIMClient) list(path string, query url.Values) (Page, error) {
+	var page Page
+
 	url := c.url + path
 	if len(query) > 0 {
 		url += "?" + query.Encode()
 	}
 
-	return c.getViaFullURL(url, result)
+	req := c.newGetRequest(url)
+	err := c.send(req, &page.res)
+
+	return page, err
 }
 
-func (c *PIMClient) getViaFullURL(url string, result interface{}) error {
-	req, _ := http.NewRequest("GET", url, nil)
-
-	token := fmt.Sprintf("Bearer %s", c.token.Access)
-	req.Header.Add("Authorization", token)
-
-	return sendAkeneoRequest(c.client, req, result)
+func (c *PIMClient) get(path string, result interface{}) error {
+	req := c.newGetRequest(c.url + path)
+	return c.send(req, result)
 }
 
-func (c *PIMClient) post(path string, payload interface{}) (string, error) {
+func (c *PIMClient) create(path string, payload interface{}) (string, error) {
 	req := newJSONRequest("POST", c.url+path, payload)
 	req.Header.Set("Authorization", "Bearer "+c.token.Access)
 
@@ -41,15 +42,38 @@ func (c *PIMClient) post(path string, payload interface{}) (string, error) {
 	return res.Header.Get("Location"), nil
 }
 
+func (c *PIMClient) newGetRequest(url string) *http.Request {
+	req, _ := http.NewRequest("GET", url, nil)
+	return c.addAuth(req)
+}
+
+func (c *PIMClient) newJSONRequest(method, url string, payload interface{}) *http.Request {
+	req := newJSONRequest(method, url, payload)
+	return c.addAuth(req)
+}
+
 func newJSONRequest(method, url string, payload interface{}) *http.Request {
-	body, _ := json.Marshal(payload)
-	req, _ := http.NewRequest(method, url, bytes.NewBuffer(body))
+	b, _ := json.Marshal(payload)
+	body := bytes.NewReader(b)
+
+	req, _ := http.NewRequest(method, url, body)
 	req.Header.Set("Content-Type", "application/json")
 
 	return req
 }
 
-func sendAkeneoRequest(client *http.Client, req *http.Request, result interface{}) error {
+func (c *PIMClient) addAuth(req *http.Request) *http.Request {
+	token := fmt.Sprintf("Bearer %s", c.token.Access)
+	req.Header.Add("Authorization", token)
+
+	return req
+}
+
+func (c *PIMClient) send(req *http.Request, result interface{}) error {
+	return sendRequest(c.client, req, result)
+}
+
+func sendRequest(client *http.Client, req *http.Request, result interface{}) error {
 	res, err := client.Do(req)
 	if err != nil {
 		return wrapFailedError()

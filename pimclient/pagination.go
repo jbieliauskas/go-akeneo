@@ -59,11 +59,10 @@ func (page *Page) linkMissing(link string) bool {
 }
 
 func (page *Page) getNewPage(link string, client *PIMClient) (Page, error) {
-	var res pageResponse
-	err := client.getViaFullURL(page.res.Links[link].URL, &res)
-	if err != nil {
-		return Page{}, err
-	}
+	var p Page
 
-	return Page{res}, nil
+	req := client.newGetRequest(page.res.Links[link].URL)
+	err := client.send(req, &p.res)
+
+	return p, err
 }
