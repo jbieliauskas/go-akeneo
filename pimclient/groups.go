@@ -14,14 +14,11 @@ func (c *PIMClient) ListAttributeGroups() (Page, error) {
 // GetAttributeGroup gets attribute group by code.
 func (c *PIMClient) GetAttributeGroup(code string) (pim.AttributeGroup, error) {
 	path := fmt.Sprintf("/api/rest/v1/attribute-groups/%s", code)
+
 	var group pim.AttributeGroup
-
 	err := c.get(path, &group)
-	if err != nil {
-		return group, err
-	}
 
-	return group, nil
+	return group, err
 }
 
 // CreateAttributeGroup creates a group.
