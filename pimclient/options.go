@@ -19,11 +19,22 @@ func (c *PIMClient) GetAttributeOption(attr, code string) (pim.AttributeOption, 
 	var opt pim.AttributeOption
 	err := c.get(path, &opt)
 
+	opt.Ord++
+
 	return opt, err
 }
 
 // CreateAttributeOption creates option.
 func (c *PIMClient) CreateAttributeOption(attr string, opt pim.AttributeOption) (string, error) {
 	path := fmt.Sprintf("/api/rest/v1/attributes/%s/options", attr)
-	return c.create(path, opt)
+
+	m := map[string]interface{}{"code": opt.Code}
+	if opt.Ord > 0 {
+		m["sort_order"] = opt.Ord - 1
+	}
+	if opt.Labels != nil && len(opt.Labels) > 0 {
+		m["labels"] = opt.Labels
+	}
+
+	return c.create(path, m)
 }
