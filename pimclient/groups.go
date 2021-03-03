@@ -18,10 +18,23 @@ func (c *PIMClient) GetAttributeGroup(code string) (pim.AttributeGroup, error) {
 	var group pim.AttributeGroup
 	err := c.get(path, &group)
 
+	group.Ord++
+
 	return group, err
 }
 
 // CreateAttributeGroup creates a group.
 func (c *PIMClient) CreateAttributeGroup(group pim.AttributeGroup) (string, error) {
-	return c.create("/api/rest/v1/attribute-groups", group)
+	m := map[string]interface{}{"code": group.Code}
+	if group.Ord > 0 {
+		m["sort_order"] = group.Ord - 1
+	}
+	if group.Attrs != nil && len(group.Attrs) > 0 {
+		m["attributes"] = group.Attrs
+	}
+	if group.Labels != nil && len(group.Labels) > 0 {
+		m["labels"] = group.Labels
+	}
+
+	return c.create("/api/rest/v1/attribute-groups", m)
 }
