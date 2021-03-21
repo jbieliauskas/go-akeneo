@@ -8,7 +8,19 @@ import (
 
 // ListAttributeGroups returns a list of all attribute groups in PIM.
 func (c *PIMClient) ListAttributeGroups() (Page, error) {
-	return c.list("/api/rest/v1/attribute-groups", nil)
+	return c.list("/api/rest/v1/attribute-groups", nil, func(d pageItemDecoder) interface{} {
+		gs := []pim.AttributeGroup{}
+
+		for d.more() {
+			var g pim.AttributeGroup
+			d.decode(&g)
+			g.Ord++
+
+			gs = append(gs, g)
+		}
+
+		return gs
+	})
 }
 
 // GetAttributeGroup gets attribute group by code.

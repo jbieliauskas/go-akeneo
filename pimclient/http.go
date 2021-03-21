@@ -9,18 +9,24 @@ import (
 	"net/url"
 )
 
-func (c *PIMClient) list(path string, query url.Values) (Page, error) {
-	var page Page
-
+func (c *PIMClient) list(path string, query url.Values, decodeItems func(d pageItemDecoder) interface{}) (Page, error) {
 	url := c.url + path
 	if len(query) > 0 {
 		url += "?" + query.Encode()
 	}
-
 	req := c.newGetRequest(url)
-	err := c.send(req, &page.res)
 
-	return page, err
+	res, err := c.client.Do(req)
+	if err != nil {
+		return Page{}, wrapFailedError()
+	}
+
+	p, err := newPage(res.Body, decodeItems)
+	if err != nil {
+		return Page{}, wrapFailedError()
+	}
+
+	return p, nil
 }
 
 func (c *PIMClient) get(path string, result interface{}) error {

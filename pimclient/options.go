@@ -9,7 +9,20 @@ import (
 // ListAttributeOptions lists options of an attribute.
 func (c *PIMClient) ListAttributeOptions(attr string) (Page, error) {
 	path := fmt.Sprintf("/api/rest/v1/attributes/%s/options", attr)
-	return c.list(path, nil)
+
+	return c.list(path, nil, func(d pageItemDecoder) interface{} {
+		opts := []pim.AttributeOption{}
+
+		for d.more() {
+			var opt pim.AttributeOption
+			d.decode(&opt)
+			opt.Ord++
+
+			opts = append(opts, opt)
+		}
+
+		return opts
+	})
 }
 
 // GetAttributeOption gets an attribute option.
