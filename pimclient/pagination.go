@@ -10,12 +10,37 @@ type Page struct {
 	Len   int
 	Items interface{}
 
-	first, prev, next string
+	next        string
+	decodeItems func(d pageItemDecoder) interface{}
 }
 
 type pageItemDecoder struct {
 	d   *json.Decoder
 	err error
+}
+
+func (p *Page) IsLast() bool {
+	return p.next == ""
+}
+
+func (p *Page) Next(c PIMClient) (Page, error) {
+	if p.IsLast() {
+		return *p, nil
+	}
+
+	req := c.newGetRequest(p.next)
+
+	res, err := c.client.Do(req)
+	if err != nil {
+		return Page{}, wrapFailedError()
+	}
+
+	next, err := newPage(res.Body, p.decodeItems)
+	if err != nil {
+		return Page{}, wrapFailedError()
+	}
+
+	return next, nil
 }
 
 func newPage(body io.ReadCloser, decodeItems func(d pageItemDecoder) interface{}) (Page, error) {
@@ -41,6 +66,8 @@ func newPage(body io.ReadCloser, decodeItems func(d pageItemDecoder) interface{}
 		}
 	}
 
+	p.decodeItems = decodeItems
+
 	return p, err
 }
 
@@ -59,12 +86,6 @@ func decodePageLinks(d *json.Decoder, p *Page) error {
 		return err
 	}
 
-	if links.First != nil {
-		p.first = links.First.Href
-	}
-	if links.Prev != nil {
-		p.prev = links.Prev.Href
-	}
 	if links.Next != nil {
 		p.next = links.Next.Href
 	}

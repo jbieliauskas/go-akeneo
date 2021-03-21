@@ -23,6 +23,9 @@ func TestParsing(t *testing.T) {
 			},
 			"previous": {
 				"href": "https://pim.e-store.net/api/rest/v1/resources?page=1&limt=2"
+			},
+			"next": {
+				"href": "https://pim.e-store.net/api/rest/v1/resources?page=3&limt=2"
 			}
 		},
 		"current_page": 2,
@@ -67,13 +70,7 @@ func TestParsing(t *testing.T) {
 		t.Fatal("newPage() failed with an error: ", err)
 	}
 
-	if p.first != "https://pim.e-store.net/api/rest/v1/resources?page=1&limt=2" {
-		t.Error("Wrong first page link: ", p.first)
-	}
-	if p.prev != "https://pim.e-store.net/api/rest/v1/resources?page=1&limt=2" {
-		t.Error("Wrong previous page link: ", p.prev)
-	}
-	if p.next != "" {
+	if p.next != "https://pim.e-store.net/api/rest/v1/resources?page=3&limt=2" {
 		t.Error("Expected no next page link but received: ", p.next)
 	}
 
