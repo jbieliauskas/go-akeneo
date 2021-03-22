@@ -19,12 +19,12 @@ func (c *PIMClient) list(path string, query url.Values, decodeItems func(d pageI
 }
 
 func (c *PIMClient) get(path string, result interface{}) error {
-	req := c.newGetRequest(c.url + path)
+	req := c.authenticate(newGetRequest(c.url + path))
 	return sendRequest(c.client, req, result)
 }
 
 func (c *PIMClient) create(path string, payload interface{}) (string, error) {
-	req := c.newJSONRequest("POST", c.url+path, payload)
+	req := c.authenticate(newJSONRequest("POST", c.url+path, payload))
 
 	res, err := c.client.Do(req)
 	if err != nil {
@@ -37,7 +37,7 @@ func (c *PIMClient) create(path string, payload interface{}) (string, error) {
 }
 
 func (c *PIMClient) getPage(url string, decodeItems func(d pageItemDecoder) interface{}) (Page, error) {
-	req := c.newGetRequest(url)
+	req := c.authenticate(newGetRequest(url))
 
 	res, err := c.client.Do(req)
 	if err != nil {
@@ -52,30 +52,21 @@ func (c *PIMClient) getPage(url string, decodeItems func(d pageItemDecoder) inte
 	return p, nil
 }
 
-func (c *PIMClient) newGetRequest(url string) *http.Request {
-	req, _ := http.NewRequest("GET", url, nil)
-	return c.addAuth(req)
-}
-
-func (c *PIMClient) newJSONRequest(method, url string, payload interface{}) *http.Request {
-	req := newJSONRequest(method, url, payload)
-	return c.addAuth(req)
-}
-
-func (c *PIMClient) addAuth(req *http.Request) *http.Request {
+func (c *PIMClient) authenticate(req *http.Request) *http.Request {
 	token := fmt.Sprintf("Bearer %s", c.token.Access)
 	req.Header.Add("Authorization", token)
+	return req
+}
 
+func newGetRequest(url string) *http.Request {
+	req, _ := http.NewRequest("GET", url, nil)
 	return req
 }
 
 func newJSONRequest(method, url string, payload interface{}) *http.Request {
-	b, _ := json.Marshal(payload)
-	body := bytes.NewReader(b)
-
-	req, _ := http.NewRequest(method, url, body)
+	body, _ := json.Marshal(payload)
+	req, _ := http.NewRequest(method, url, bytes.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
-
 	return req
 }
 
