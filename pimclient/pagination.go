@@ -28,19 +28,7 @@ func (p *Page) Next(c PIMClient) (Page, error) {
 		return *p, nil
 	}
 
-	req := c.newGetRequest(p.next)
-
-	res, err := c.client.Do(req)
-	if err != nil {
-		return Page{}, wrapFailedError()
-	}
-
-	next, err := newPage(res.Body, p.decodeItems)
-	if err != nil {
-		return Page{}, wrapFailedError()
-	}
-
-	return next, nil
+	return c.getPage(p.next, p.decodeItems)
 }
 
 func newPage(body io.ReadCloser, decodeItems func(d pageItemDecoder) interface{}) (Page, error) {

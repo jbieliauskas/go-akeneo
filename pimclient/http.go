@@ -14,19 +14,8 @@ func (c *PIMClient) list(path string, query url.Values, decodeItems func(d pageI
 	if len(query) > 0 {
 		url += "?" + query.Encode()
 	}
-	req := c.newGetRequest(url)
 
-	res, err := c.client.Do(req)
-	if err != nil {
-		return Page{}, wrapFailedError()
-	}
-
-	p, err := newPage(res.Body, decodeItems)
-	if err != nil {
-		return Page{}, wrapFailedError()
-	}
-
-	return p, nil
+	return c.getPage(url, decodeItems)
 }
 
 func (c *PIMClient) get(path string, result interface{}) error {
@@ -45,6 +34,22 @@ func (c *PIMClient) create(path string, payload interface{}) (string, error) {
 	res.Body.Close()
 
 	return res.Header.Get("Location"), nil
+}
+
+func (c *PIMClient) getPage(url string, decodeItems func(d pageItemDecoder) interface{}) (Page, error) {
+	req := c.newGetRequest(url)
+
+	res, err := c.client.Do(req)
+	if err != nil {
+		return Page{}, wrapFailedError()
+	}
+
+	p, err := newPage(res.Body, decodeItems)
+	if err != nil {
+		return Page{}, wrapFailedError()
+	}
+
+	return p, nil
 }
 
 func (c *PIMClient) newGetRequest(url string) *http.Request {
