@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 )
@@ -77,18 +76,12 @@ func sendRequest(client *http.Client, req *http.Request, result interface{}) err
 	}
 
 	defer res.Body.Close()
-	body, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		return wrapFailedError()
-	}
 
-	if result == nil {
-		return nil
-	}
-
-	err = json.Unmarshal(body, result)
-	if err != nil {
-		return wrapFailedError()
+	if result != nil {
+		err := json.NewDecoder(res.Body).Decode(result)
+		if err != nil {
+			return wrapFailedError()
+		}
 	}
 
 	return nil
