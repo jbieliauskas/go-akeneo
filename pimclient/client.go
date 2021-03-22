@@ -2,6 +2,7 @@ package pimclient
 
 import (
 	"encoding/base64"
+	"fmt"
 	"net/http"
 )
 
@@ -36,9 +37,7 @@ func New(url string, creds Credentials) (PIMClient, error) {
 }
 
 func getAccessToken(client *http.Client, url string, creds Credentials) (token, error) {
-	var t token
-
-	req := newJSONRequest("POST", url+"/api/oauth/v1/token", struct {
+	body := struct {
 		Username  string `json:"username"`
 		Password  string `json:"password"`
 		GrantType string `json:"grant_type"`
@@ -46,15 +45,14 @@ func getAccessToken(client *http.Client, url string, creds Credentials) (token, 
 		creds.User,
 		creds.Pass,
 		"password",
-	})
-
-	token := base64.StdEncoding.EncodeToString([]byte(creds.Cid + ":" + creds.Secret))
-	req.Header.Set("Authorization", "Basic "+token)
-
-	err := sendRequest(client, req, &t)
-	if err != nil {
-		return t, wrapFailedError()
 	}
 
-	return t, nil
+	req := newJSONRequest("POST", url+"/api/oauth/v1/token", body)
+	req.Header.Set("Authorization", fmt.Sprintf("Basic %s",
+		base64.StdEncoding.EncodeToString([]byte(creds.Cid+":"+creds.Secret)),
+	))
+
+	var t token
+	err := sendRequest(client, req, &t)
+	return t, err
 }
