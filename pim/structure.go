@@ -4,15 +4,15 @@ package pim
 type AttributeOption struct {
 	Code   string `json:"code"`
 	Ord    int    `json:"-"`
-	Labels Labels `json:"labels"`
+	Labels Labels `json:"labels,omitempty"`
 }
 
 // AttributeGroup is an attribute group.
 type AttributeGroup struct {
 	Code   string   `json:"code"`
 	Ord    int      `json:"-"`
-	Attrs  []string `json:"attributes"`
-	Labels Labels   `json:"labels"`
+	Attrs  []string `json:"attributes,omitempty"`
+	Labels Labels   `json:"labels,omitempty"`
 }
 
 // Labels is a JSON object that some Akeneo entities have.
