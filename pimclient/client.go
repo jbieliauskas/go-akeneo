@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 )
@@ -13,6 +14,15 @@ type PIMClient struct {
 	client *http.Client
 	url    string
 	token  token
+}
+
+type pimDecoder interface {
+	decode(interface{})
+}
+
+type pimResponse struct {
+	body io.ReadCloser
+	err  error
 }
 
 // New authenticates and returns PIM client
@@ -27,7 +37,7 @@ func New(url string, creds Credentials) (PIMClient, error) {
 	return PIMClient{client, url, t}, nil
 }
 
-func (c *PIMClient) list(path string, query url.Values, decodeItems func(d pageItemDecoder) interface{}) (Page, error) {
+func (c *PIMClient) list(path string, query url.Values, decodeItems decodePageItemsFunc) (Page, error) {
 	url := c.url + path
 	if len(query) > 0 {
 		url += "?" + query.Encode()
@@ -36,9 +46,9 @@ func (c *PIMClient) list(path string, query url.Values, decodeItems func(d pageI
 	return c.getPage(url, decodeItems)
 }
 
-func (c *PIMClient) get(path string, result interface{}) error {
+func (c *PIMClient) get(path string) *pimResponse {
 	req := c.authenticate(newGetRequest(c.url + path))
-	return sendRequest(c.client, req, result)
+	return sendRequest(c.client, req)
 }
 
 func (c *PIMClient) create(path string, payload interface{}) (string, error) {
@@ -54,20 +64,21 @@ func (c *PIMClient) create(path string, payload interface{}) (string, error) {
 	return res.Header.Get("Location"), nil
 }
 
-func (c *PIMClient) getPage(url string, decodeItems func(d pageItemDecoder) interface{}) (Page, error) {
+func (c *PIMClient) getPage(url string, decodeItems decodePageItemsFunc) (Page, error) {
+	var p Page
+
 	req := c.authenticate(newGetRequest(url))
+	res := sendRequest(c.client, req)
 
-	res, err := c.client.Do(req)
-	if err != nil {
-		return Page{}, wrapFailedError()
+	err := res.err
+	if err == nil {
+		p, err = newPage(res.body, decodeItems)
+		if err != nil {
+			err = wrapFailedError()
+		}
 	}
 
-	p, err := newPage(res.Body, decodeItems)
-	if err != nil {
-		return Page{}, wrapFailedError()
-	}
-
-	return p, nil
+	return p, err
 }
 
 func (c *PIMClient) authenticate(req *http.Request) *http.Request {
@@ -88,20 +99,25 @@ func newJSONRequest(method, url string, payload interface{}) *http.Request {
 	return req
 }
 
-func sendRequest(client *http.Client, req *http.Request, result interface{}) error {
+func sendRequest(client *http.Client, req *http.Request) *pimResponse {
 	res, err := client.Do(req)
+
 	if err != nil {
-		return wrapFailedError()
+		err = wrapFailedError()
 	}
 
-	defer res.Body.Close()
+	return &pimResponse{res.Body, err}
+}
 
-	if result != nil {
-		err := json.NewDecoder(res.Body).Decode(result)
-		if err != nil {
-			return wrapFailedError()
-		}
+func (res *pimResponse) decode(entity interface{}) {
+	if res.err != nil {
+		return
 	}
 
-	return nil
+	res.err = json.NewDecoder(res.body).Decode(entity)
+	if res.err != nil {
+		res.err = wrapFailedError()
+	}
+
+	res.body.Close()
 }

@@ -8,14 +8,11 @@ import (
 
 // ListAttributeGroups returns a list of all attribute groups in PIM.
 func (c *PIMClient) ListAttributeGroups() (Page, error) {
-	return c.list("/api/rest/v1/attribute-groups", nil, func(d pageItemDecoder) interface{} {
+	return c.list("/api/rest/v1/attribute-groups", nil, func(d *pageItemDecoder) interface{} {
 		gs := []pim.AttributeGroup{}
 
 		for d.more() {
-			var g pim.AttributeGroup
-			d.decode(&g)
-			g.Ord++
-
+			g := decodeAttributeGroup(d)
 			gs = append(gs, g)
 		}
 
@@ -26,27 +23,35 @@ func (c *PIMClient) ListAttributeGroups() (Page, error) {
 // GetAttributeGroup gets attribute group by code.
 func (c *PIMClient) GetAttributeGroup(code string) (pim.AttributeGroup, error) {
 	path := fmt.Sprintf("/api/rest/v1/attribute-groups/%s", code)
-
-	var group pim.AttributeGroup
-	err := c.get(path, &group)
-
-	group.Ord++
-
-	return group, err
+	res := c.get(path)
+	g := decodeAttributeGroup(res)
+	return g, res.err
 }
 
 // CreateAttributeGroup creates a group.
-func (c *PIMClient) CreateAttributeGroup(group pim.AttributeGroup) (string, error) {
-	m := map[string]interface{}{"code": group.Code}
-	if group.Ord > 0 {
-		m["sort_order"] = group.Ord - 1
-	}
-	if group.Attrs != nil && len(group.Attrs) > 0 {
-		m["attributes"] = group.Attrs
-	}
-	if group.Labels != nil && len(group.Labels) > 0 {
-		m["labels"] = group.Labels
+func (c *PIMClient) CreateAttributeGroup(g pim.AttributeGroup) (string, error) {
+	var ord *int
+	if g.Ord != 0 {
+		ord = &g.Ord
 	}
 
-	return c.create("/api/rest/v1/attribute-groups", m)
+	return c.create("/api/rest/v1/attribute-groups", struct {
+		pim.AttributeGroup
+		SortOrder *int `json:"sort_order,omitempty"`
+	}{
+		g,
+		ord,
+	})
+}
+
+func decodeAttributeGroup(d pimDecoder) pim.AttributeGroup {
+	var g struct {
+		pim.AttributeGroup
+		SortOrder int `json:"sort_order"`
+	}
+
+	d.decode(&g)
+	g.Ord = g.SortOrder + 1
+
+	return g.AttributeGroup
 }

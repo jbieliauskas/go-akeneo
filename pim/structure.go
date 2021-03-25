@@ -3,14 +3,14 @@ package pim
 // AttributeOption is an attribute option response structure.
 type AttributeOption struct {
 	Code   string `json:"code"`
-	Ord    int    `json:"sort_order"`
+	Ord    int    `json:"-"`
 	Labels Labels `json:"labels"`
 }
 
 // AttributeGroup is an attribute group.
 type AttributeGroup struct {
 	Code   string   `json:"code"`
-	Ord    int      `json:"sort_order"`
+	Ord    int      `json:"-"`
 	Attrs  []string `json:"attributes"`
 	Labels Labels   `json:"labels"`
 }

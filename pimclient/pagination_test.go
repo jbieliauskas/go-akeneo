@@ -54,7 +54,7 @@ func TestParsing(t *testing.T) {
 	}`
 	body := io.NopCloser(strings.NewReader(res))
 
-	p, err := newPage(body, func(d pageItemDecoder) interface{} {
+	p, err := newPage(body, func(d *pageItemDecoder) interface{} {
 		items := []testPageItem{}
 
 		for d.more() {

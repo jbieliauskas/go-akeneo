@@ -11,8 +11,10 @@ type Page struct {
 	Items interface{}
 
 	next        string
-	decodeItems func(d pageItemDecoder) interface{}
+	decodeItems decodePageItemsFunc
 }
+
+type decodePageItemsFunc func(*pageItemDecoder) interface{}
 
 type pageItemDecoder struct {
 	d   *json.Decoder
@@ -31,7 +33,7 @@ func (p *Page) Next(c PIMClient) (Page, error) {
 	return c.getPage(p.next, p.decodeItems)
 }
 
-func newPage(body io.ReadCloser, decodeItems func(d pageItemDecoder) interface{}) (Page, error) {
+func newPage(body io.ReadCloser, decodeItems decodePageItemsFunc) (Page, error) {
 	defer body.Close()
 
 	var p Page
@@ -81,12 +83,12 @@ func decodePageLinks(d *json.Decoder, p *Page) error {
 	return nil
 }
 
-func decodePageItems(d *json.Decoder, p *Page, decodeItems func(d pageItemDecoder) interface{}) error {
+func decodePageItems(d *json.Decoder, p *Page, decodeItems decodePageItemsFunc) error {
 	var dec pageItemDecoder
 	dec.d = d
 	_, dec.err = d.Token()
 
-	p.Items = decodeItems(dec)
+	p.Items = decodeItems(&dec)
 
 	return dec.err
 }

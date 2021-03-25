@@ -34,6 +34,8 @@ func getAccessToken(client *http.Client, url string, creds Credentials) (token, 
 	))
 
 	var t token
-	err := sendRequest(client, req, &t)
-	return t, err
+	res := sendRequest(client, req)
+	res.decode(&t)
+
+	return t, res.err
 }
