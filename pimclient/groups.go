@@ -44,6 +44,21 @@ func (c *PIMClient) CreateAttributeGroup(g pim.AttributeGroup) (string, error) {
 	})
 }
 
+func (c *PIMClient) UpsertAttributeGroup(g pim.AttributeGroup) (upsertAction, error) {
+	var ord *int
+	if g.Ord != 0 {
+		ord = &g.Ord
+	}
+
+	return c.upsert("/api/rest/v1/attribute-groups", struct {
+		pim.AttributeGroup
+		SortOrder *int `json:"sort_order,omitempty"`
+	}{
+		g,
+		ord,
+	})
+}
+
 func decodeAttributeGroup(d pimDecoder) pim.AttributeGroup {
 	var g struct {
 		pim.AttributeGroup

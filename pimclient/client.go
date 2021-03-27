@@ -21,9 +21,17 @@ type pimDecoder interface {
 }
 
 type pimResponse struct {
-	body io.ReadCloser
-	err  error
+	status int
+	body   io.ReadCloser
+	err    error
 }
+
+type upsertAction uint8
+
+const (
+	Create = upsertAction(1)
+	Update = upsertAction(2)
+)
 
 // New authenticates and returns PIM client
 func New(url string, creds Credentials) (PIMClient, error) {
@@ -62,6 +70,26 @@ func (c *PIMClient) create(path string, payload interface{}) (string, error) {
 	res.Body.Close()
 
 	return res.Header.Get("Location"), nil
+}
+
+func (c *PIMClient) upsert(path string, payload interface{}) (upsertAction, error) {
+	req := c.authenticate(newJSONRequest("PATCH", c.url+path, payload))
+	res := sendRequest(c.client, req)
+	res.body.Close()
+
+	err := res.err
+	if err == nil {
+		if res.status == http.StatusCreated {
+			return Create, nil
+		}
+		if res.status == http.StatusNoContent {
+			return Update, nil
+		}
+
+		err = wrapFailedError()
+	}
+
+	return upsertAction(0), err
 }
 
 func (c *PIMClient) getPage(url string, decodeItems decodePageItemsFunc) (Page, error) {
@@ -106,7 +134,7 @@ func sendRequest(client *http.Client, req *http.Request) *pimResponse {
 		err = wrapFailedError()
 	}
 
-	return &pimResponse{res.Body, err}
+	return &pimResponse{res.StatusCode, res.Body, err}
 }
 
 func (res *pimResponse) decode(entity interface{}) {
