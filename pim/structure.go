@@ -112,11 +112,11 @@ func (c *PIMClient) UpsertAttributeOption(attr string, opt AttributeOption) (ups
 func decodeAttributeGroup(d pimDecoder) AttributeGroup {
 	var g struct {
 		AttributeGroup
-		OrdPtr int `json:"sort_order"`
+		SortOrd int `json:"sort_order"`
 	}
-
 	d.decode(&g)
-	g.Ord = g.OrdPtr + 1
+
+	g.Ord = g.SortOrd + 1
 
 	return g.AttributeGroup
 }
@@ -124,11 +124,11 @@ func decodeAttributeGroup(d pimDecoder) AttributeGroup {
 func decodeAttributeOption(d pimDecoder) AttributeOption {
 	var opt struct {
 		AttributeOption
-		OrdPtr int `json:"sort_order"`
+		SortOrd int `json:"sort_order"`
 	}
-
 	d.decode(&opt)
-	opt.Ord = opt.OrdPtr + 1
+
+	opt.Ord = opt.SortOrd + 1
 
 	return opt.AttributeOption
 }
