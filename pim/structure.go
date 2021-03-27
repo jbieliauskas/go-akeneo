@@ -41,32 +41,22 @@ func (c *PIMClient) GetAttributeGroup(code string) (AttributeGroup, error) {
 
 // CreateAttributeGroup creates a group.
 func (c *PIMClient) CreateAttributeGroup(g AttributeGroup) (string, error) {
-	var ord *int
-	if g.Ord != 0 {
-		ord = &g.Ord
-	}
-
 	return c.create("/api/rest/v1/attribute-groups", struct {
 		AttributeGroup
 		OrdPtr *int `json:"sort_order,omitempty"`
 	}{
 		g,
-		ord,
+		convertSortOrderToPointer(g.Ord),
 	})
 }
 
 func (c *PIMClient) UpsertAttributeGroup(g AttributeGroup) (upsertAction, error) {
-	var ord *int
-	if g.Ord != 0 {
-		ord = &g.Ord
-	}
-
 	return c.upsert("/api/rest/v1/attribute-groups", struct {
 		AttributeGroup
 		OrdPtr *int `json:"sort_order,omitempty"`
 	}{
 		g,
-		ord,
+		convertSortOrderToPointer(g.Ord),
 	})
 }
 
@@ -96,11 +86,6 @@ func (c *PIMClient) GetAttributeOption(attr, code string) (AttributeOption, erro
 
 // CreateAttributeOption creates option.
 func (c *PIMClient) CreateAttributeOption(attr string, opt AttributeOption) (string, error) {
-	var ord *int
-	if opt.Ord != 0 {
-		ord = &opt.Ord
-	}
-
 	path := fmt.Sprintf("/api/rest/v1/attributes/%s/options", attr)
 
 	return c.create(path, struct {
@@ -108,24 +93,19 @@ func (c *PIMClient) CreateAttributeOption(attr string, opt AttributeOption) (str
 		OrdPtr *int `json:"sort_order,omitempty"`
 	}{
 		opt,
-		ord,
+		convertSortOrderToPointer(opt.Ord),
 	})
 }
 
 func (c *PIMClient) UpsertAttributeOption(attr string, opt AttributeOption) (upsertAction, error) {
 	path := fmt.Sprintf("/api/rest/v1/attributes/%s/options", attr)
 
-	var ord *int
-	if opt.Ord != 0 {
-		ord = &opt.Ord
-	}
-
 	return c.upsert(path, struct {
 		AttributeOption
 		OrdPtr *int `json:"sort_order,omitempty"`
 	}{
 		opt,
-		ord,
+		convertSortOrderToPointer(opt.Ord),
 	})
 }
 
@@ -151,4 +131,11 @@ func decodeAttributeOption(d pimDecoder) AttributeOption {
 	opt.Ord = opt.OrdPtr + 1
 
 	return opt.AttributeOption
+}
+
+func convertSortOrderToPointer(ord int) *int {
+	if ord == 0 {
+		return nil
+	}
+	return &ord
 }
