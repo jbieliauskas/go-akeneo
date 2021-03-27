@@ -1,17 +1,20 @@
-package pimclient
+package pim
 
-import (
-	"fmt"
+import "fmt"
 
-	"github.com/jbieliauskas/go-akeneo/pim"
-)
+// AttributeOption is an attribute option response structure.
+type AttributeOption struct {
+	Code   string            `json:"code"`
+	Ord    int               `json:"-"`
+	Labels map[string]string `json:"labels,omitempty"`
+}
 
 // ListAttributeOptions lists options of an attribute.
 func (c *PIMClient) ListAttributeOptions(attr string) (Page, error) {
 	path := fmt.Sprintf("/api/rest/v1/attributes/%s/options", attr)
 
 	return c.list(path, nil, func(d *pageItemDecoder) interface{} {
-		opts := []pim.AttributeOption{}
+		opts := []AttributeOption{}
 
 		for d.more() {
 			opt := decodeAttributeOption(d)
@@ -23,7 +26,7 @@ func (c *PIMClient) ListAttributeOptions(attr string) (Page, error) {
 }
 
 // GetAttributeOption gets an attribute option.
-func (c *PIMClient) GetAttributeOption(attr, code string) (pim.AttributeOption, error) {
+func (c *PIMClient) GetAttributeOption(attr, code string) (AttributeOption, error) {
 	path := fmt.Sprintf("/api/rest/v1/attributes/%s/options/%s", attr, code)
 	res := c.get(path)
 	opt := decodeAttributeOption(res)
@@ -31,7 +34,7 @@ func (c *PIMClient) GetAttributeOption(attr, code string) (pim.AttributeOption, 
 }
 
 // CreateAttributeOption creates option.
-func (c *PIMClient) CreateAttributeOption(attr string, opt pim.AttributeOption) (string, error) {
+func (c *PIMClient) CreateAttributeOption(attr string, opt AttributeOption) (string, error) {
 	var ord *int
 	if opt.Ord != 0 {
 		ord = &opt.Ord
@@ -40,7 +43,7 @@ func (c *PIMClient) CreateAttributeOption(attr string, opt pim.AttributeOption) 
 	path := fmt.Sprintf("/api/rest/v1/attributes/%s/options", attr)
 
 	return c.create(path, struct {
-		pim.AttributeOption
+		AttributeOption
 		SortOrder *int `json:"sort_order,omitempty"`
 	}{
 		opt,
@@ -48,7 +51,7 @@ func (c *PIMClient) CreateAttributeOption(attr string, opt pim.AttributeOption) 
 	})
 }
 
-func (c *PIMClient) UpsertAttributeOption(attr string, opt pim.AttributeOption) (upsertAction, error) {
+func (c *PIMClient) UpsertAttributeOption(attr string, opt AttributeOption) (upsertAction, error) {
 	path := fmt.Sprintf("/api/rest/v1/attributes/%s/options", attr)
 
 	var ord *int
@@ -57,7 +60,7 @@ func (c *PIMClient) UpsertAttributeOption(attr string, opt pim.AttributeOption) 
 	}
 
 	return c.upsert(path, struct {
-		pim.AttributeOption
+		AttributeOption
 		SortOrder *int `json:"sort_order,omitempty"`
 	}{
 		opt,
@@ -65,9 +68,9 @@ func (c *PIMClient) UpsertAttributeOption(attr string, opt pim.AttributeOption) 
 	})
 }
 
-func decodeAttributeOption(d pimDecoder) pim.AttributeOption {
+func decodeAttributeOption(d pimDecoder) AttributeOption {
 	var opt struct {
-		pim.AttributeOption
+		AttributeOption
 		SortOrder int `json:"sort_order"`
 	}
 

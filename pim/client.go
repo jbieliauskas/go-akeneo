@@ -1,4 +1,4 @@
-package pimclient
+package pim
 
 import (
 	"bytes"
@@ -33,8 +33,8 @@ const (
 	Update = upsertAction(2)
 )
 
-// New authenticates and returns PIM client
-func New(url string, creds Credentials) (PIMClient, error) {
+// NewClient authenticates and returns PIM client
+func NewClient(url string, creds Credentials) (PIMClient, error) {
 	client := new(http.Client)
 
 	t, err := getAccessToken(client, url, creds)
