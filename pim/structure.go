@@ -42,7 +42,7 @@ func (c *PIMClient) GetAttributeGroup(code string) (AttributeGroup, error) {
 }
 
 // CreateAttributeGroup creates a group.
-func (c *PIMClient) CreateAttributeGroup(g AttributeGroup) (string, error) {
+func (c *PIMClient) CreateAttributeGroup(g AttributeGroup) error {
 	return c.create("/api/rest/v1/attribute-groups", struct {
 		AttributeGroup
 		OrdPtr *SortOrder `json:"sort_order,omitempty"`
@@ -87,7 +87,7 @@ func (c *PIMClient) GetAttributeOption(attr, code string) (AttributeOption, erro
 }
 
 // CreateAttributeOption creates option.
-func (c *PIMClient) CreateAttributeOption(attr string, opt AttributeOption) (string, error) {
+func (c *PIMClient) CreateAttributeOption(attr string, opt AttributeOption) error {
 	path := fmt.Sprintf("/api/rest/v1/attributes/%s/options", attr)
 
 	return c.create(path, struct {

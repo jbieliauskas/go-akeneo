@@ -59,17 +59,11 @@ func (c *PIMClient) get(path string) *pimResponse {
 	return sendRequest(c.client, req)
 }
 
-func (c *PIMClient) create(path string, payload interface{}) (string, error) {
+func (c *PIMClient) create(path string, payload interface{}) error {
 	req := c.authenticate(newJSONRequest("POST", c.url+path, payload))
-
-	res, err := c.client.Do(req)
-	if err != nil {
-		return "", wrapFailedError()
-	}
-
-	res.Body.Close()
-
-	return res.Header.Get("Location"), nil
+	res := sendRequest(c.client, req)
+	res.body.Close()
+	return res.err
 }
 
 func (c *PIMClient) upsert(path string, payload interface{}) (upsertAction, error) {
