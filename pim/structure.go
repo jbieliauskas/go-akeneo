@@ -5,7 +5,7 @@ import "fmt"
 // AttributeGroup is an attribute group.
 type AttributeGroup struct {
 	Code   string            `json:"code"`
-	Ord    int               `json:"-"`
+	Ord    SortOrder         `json:"-"`
 	Attrs  []string          `json:"attributes,omitempty"`
 	Labels map[string]string `json:"labels,omitempty"`
 }
@@ -13,9 +13,11 @@ type AttributeGroup struct {
 // AttributeOption is an attribute option response structure.
 type AttributeOption struct {
 	Code   string            `json:"code"`
-	Ord    int               `json:"-"`
+	Ord    SortOrder         `json:"-"`
 	Labels map[string]string `json:"labels,omitempty"`
 }
+
+type SortOrder uint16
 
 // ListAttributeGroups returns a list of all attribute groups in PIM.
 func (c *PIMClient) ListAttributeGroups() (Page, error) {
@@ -43,7 +45,7 @@ func (c *PIMClient) GetAttributeGroup(code string) (AttributeGroup, error) {
 func (c *PIMClient) CreateAttributeGroup(g AttributeGroup) (string, error) {
 	return c.create("/api/rest/v1/attribute-groups", struct {
 		AttributeGroup
-		OrdPtr *int `json:"sort_order,omitempty"`
+		OrdPtr *SortOrder `json:"sort_order,omitempty"`
 	}{
 		g,
 		convertSortOrderToPointer(g.Ord),
@@ -53,7 +55,7 @@ func (c *PIMClient) CreateAttributeGroup(g AttributeGroup) (string, error) {
 func (c *PIMClient) UpsertAttributeGroup(g AttributeGroup) (upsertAction, error) {
 	return c.upsert("/api/rest/v1/attribute-groups", struct {
 		AttributeGroup
-		OrdPtr *int `json:"sort_order,omitempty"`
+		OrdPtr *SortOrder `json:"sort_order,omitempty"`
 	}{
 		g,
 		convertSortOrderToPointer(g.Ord),
@@ -90,7 +92,7 @@ func (c *PIMClient) CreateAttributeOption(attr string, opt AttributeOption) (str
 
 	return c.create(path, struct {
 		AttributeOption
-		OrdPtr *int `json:"sort_order,omitempty"`
+		OrdPtr *SortOrder `json:"sort_order,omitempty"`
 	}{
 		opt,
 		convertSortOrderToPointer(opt.Ord),
@@ -102,7 +104,7 @@ func (c *PIMClient) UpsertAttributeOption(attr string, opt AttributeOption) (ups
 
 	return c.upsert(path, struct {
 		AttributeOption
-		OrdPtr *int `json:"sort_order,omitempty"`
+		OrdPtr *SortOrder `json:"sort_order,omitempty"`
 	}{
 		opt,
 		convertSortOrderToPointer(opt.Ord),
@@ -112,7 +114,7 @@ func (c *PIMClient) UpsertAttributeOption(attr string, opt AttributeOption) (ups
 func decodeAttributeGroup(d pimDecoder) AttributeGroup {
 	var g struct {
 		AttributeGroup
-		SortOrd int `json:"sort_order"`
+		SortOrd SortOrder `json:"sort_order"`
 	}
 	d.decode(&g)
 
@@ -124,7 +126,7 @@ func decodeAttributeGroup(d pimDecoder) AttributeGroup {
 func decodeAttributeOption(d pimDecoder) AttributeOption {
 	var opt struct {
 		AttributeOption
-		SortOrd int `json:"sort_order"`
+		SortOrd SortOrder `json:"sort_order"`
 	}
 	d.decode(&opt)
 
@@ -133,7 +135,7 @@ func decodeAttributeOption(d pimDecoder) AttributeOption {
 	return opt.AttributeOption
 }
 
-func convertSortOrderToPointer(ord int) *int {
+func convertSortOrderToPointer(ord SortOrder) *SortOrder {
 	if ord == 0 {
 		return nil
 	}
