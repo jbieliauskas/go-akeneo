@@ -20,6 +20,10 @@ type pimDecoder interface {
 	decode(interface{})
 }
 
+type encodable interface {
+	encode(*json.Encoder)
+}
+
 type pimResponse struct {
 	status int
 	body   io.ReadCloser
@@ -114,9 +118,17 @@ func newGetRequest(url string) *http.Request {
 	return req
 }
 
-func newJSONRequest(method, url string, payload interface{}) *http.Request {
-	body, _ := json.Marshal(payload)
-	req, _ := http.NewRequest(method, url, bytes.NewReader(body))
+func newJSONRequest(method, url string, v interface{}) *http.Request {
+	body := bytes.NewBuffer([]byte{})
+	e := json.NewEncoder(body)
+
+	if entity, ok := v.(encodable); ok {
+		entity.encode(e)
+	} else {
+		e.Encode(v)
+	}
+
+	req, _ := http.NewRequest(method, url, body)
 	req.Header.Set("Content-Type", "application/json")
 	return req
 }
